@@ -1,6 +1,6 @@
 # Relatório: Mini-Projeto 1 - Quebra-Senhas Paralelo
 
-**Aluno(s):** Nome (Matrícula), Nome (Matrícula),,,  
+**Aluno(s):** Bruna Amorim Maia (10431883), Fabyani Tiva Yan (10431835), Rafael Araujo Cabral Moreira (10441919), Rute Willemann (10436781) 
 ---
 
 ## 1. Estratégia de Paralelização
