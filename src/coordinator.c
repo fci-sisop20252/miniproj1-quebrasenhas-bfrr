@@ -62,11 +62,16 @@ void index_to_password(long long index, const char *charset, int charset_len,
  * Função principal do coordenador
  */
 int main(int argc, char *argv[]) {
-    // TODO 1: Validar argumentos de entrada
+    // TODO 1: Validar argumentos de entrada // FEITO
     // Verificar se argc == 5 (programa + 4 argumentos)
     // Se não, imprimir mensagem de uso e sair com código 1
     
     // IMPLEMENTE AQUI: verificação de argc e mensagem de erro
+    
+    if (argc != 5){
+     printf("ERRO! USO INVALIDO!\n");
+            return 1;
+    }
     
     // Parsing dos argumentos (após validação)
     const char *target_hash = argv[1];
