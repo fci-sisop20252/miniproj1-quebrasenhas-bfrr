@@ -46,7 +46,40 @@ int increment_password(char *password, const char *charset, int charset_len, int
     // - Se estourou: definir como primeiro caractere e continuar loop
     // - Se todos estouraram: retornar 0 (fim do espaço)
     
-    return 0;  // SUBSTITUA por sua implementação
+    for (int i = password_len - 1; i >= 0; i--) {
+        // Encontra a posição do caractere atual no conjunto de caracteres (charset)
+        char *pos = strchr(charset, password[i]);
+        if (pos == NULL) {
+            // Esse caso de erro não deve acontecer se a senha inicial for válida
+            // Verifica que todos os caracteres da senha estão no charset
+            return 0;
+        }
+
+        // Calcula o índice do caractere atual no charset
+        // Exemplo: charset = "abc" e password[i] = 'a', o índice seria 0
+        int index = pos - charset;
+
+        // Tenta avançar para o próximo caractere no charset
+        // Se o caractere atual é 'a' e o charset tem 3 posições ('a', 'b' e 'c'),
+        // a próxima posição é index + 1 = 1, que é menor que o charset_len (3)
+        index++;
+
+        // Se o novo índice for válido (não saiu dos limites do charset)
+        if (index < charset_len) {
+            // Atualiza a posição atual da senha com o novo caractere e retorna sucesso (1)
+            password[i] = charset[index];
+            return 1;
+        } else {
+            // Se o caractere estourou (era o último do charset),
+            // ele reinicia para o primeiro caractere (no caso 'a' do exemplo "abc")
+            // O loop continua para o próximo caractere à esquerda
+            password[i] = charset[0];
+        }
+    }
+
+    // Se o loop terminar, significa que todos os caracteres estouraram
+    // (worker chegou ao fim do seu espaço de busca)
+    return 0;
 }
 
 /**
@@ -80,6 +113,25 @@ void save_result(int worker_id, const char *password) {
     // - Tentar abrir arquivo com O_CREAT | O_EXCL | O_WRONLY
     // - Se sucesso: escrever resultado e fechar
     // - Se falhou: outro worker já encontrou
+
+    int fd = open(RESULT_FILE, O_CREAT | O_EXCL | O_WRONLY, 0644);
+
+    // Se o descritor de arquivo (fd) for maior ou igual a 0, a chamada open() deu certo
+    // (esse worker foi o primeiro a encontrar a senha)
+    if (fd >= 0) {
+        char buffer[256];
+        // snprintf formata a string no buffer, evitando estouro
+        int len = snprintf(buffer, sizeof(buffer), "%d:%s\n", worker_id, password);
+        // write() escreve o conteúdo do buffer no arquivo
+        write(fd, buffer, len);
+        // close() fecha o arquivo e libera o descritor de arquivo
+        close(fd);
+        printf("[Worker %d] Resultado salvo!\n", worker_id);
+    } else {
+        // Se open() falhou (fd < 0), significa que o arquivo já existia
+        // Outro worker já encontrou a senha e salvou o resultado
+        // Este worker deve apenas parar a busca
+    }
 }
 
 /**
@@ -114,7 +166,7 @@ int main(int argc, char *argv[]) {
     long long passwords_checked = 0;
     time_t start_time = time(NULL);
     time_t last_progress_time = start_time;
-    
+        
     // Loop principal de verificação
     while (1) {
         // TODO 3: Verificar periodicamente se outro worker já encontrou a senha
