@@ -62,12 +62,11 @@ void index_to_password(long long index, const char *charset, int charset_len,
  * Função principal do coordenador
  */
 int main(int argc, char *argv[]) {
-    // TODO 1: Validar argumentos de entrada // FEITO
+    // TODO 1: Validar argumentos de entrada//***************FEITO*******************
     // Verificar se argc == 5 (programa + 4 argumentos)
     // Se não, imprimir mensagem de uso e sair com código 1
     
-    // IMPLEMENTE AQUI: verificação de argc e mensagem de erro
-    
+    // IMPLEMENTE AQUI: verificação de argc e mensagem de erro   
     if (argc != 5){
      printf("ERRO! USO INVALIDO!\n");
             return 1;
@@ -80,10 +79,23 @@ int main(int argc, char *argv[]) {
     int num_workers = atoi(argv[4]);
     int charset_len = strlen(charset);
     
-    // TODO: Adicionar validações dos parâmetros
+    // TODO: Adicionar validações dos parâmetros//***************FEITO*******************
     // - password_len deve estar entre 1 e 10
     // - num_workers deve estar entre 1 e MAX_WORKERS
     // - charset não pode ser vazio
+
+    if (password_len < 1 || password_len > 10) {
+        printf("Erro! Tamanho da senha deve estar entre 1 e 10!\n");
+        return 1;
+    }
+    if (num_workers < 1 || num_workers > MAX_WORKERS) {
+        printf("Erro! Número de workers deve estar entre 1 e %d!\n", MAX_WORKERS);
+        return 1;
+    }
+    if (charset_len == 0) {
+        printf("Erro! Charset não pode ser vazio!\n");
+        return 1;
+    }
     
     printf("=== Mini-Projeto 1: Quebra de Senhas Paralelo ===\n");
     printf("Hash MD5 alvo: %s\n", target_hash);
@@ -101,7 +113,7 @@ int main(int argc, char *argv[]) {
     // Registrar tempo de início
     time_t start_time = time(NULL);
     
-    // TODO 2: Dividir o espaço de busca entre os workers
+    // TODO 2: Dividir o espaço de busca entre os workers //***************FEITO*******************
     // Calcular quantas senhas cada worker deve verificar
     // DICA: Use divisão inteira e distribua o resto entre os primeiros workers
     
@@ -109,6 +121,16 @@ int main(int argc, char *argv[]) {
     // long long passwords_per_worker = ?
     // long long remaining = ?
     
+    // total de combinacoes no espaço de busca
+     long long total_passwords = 1;
+     for (int i = 0; i < password_len; i++) {
+     total_passwords *= charset_len;
+    }
+
+     //divisao entre os workers
+     long long passwords_per_worker = total_passwords / num_workers;  // para o quociente
+     long long remaining = total_passwords % num_workers;  // para o resto
+   
     // Arrays para armazenar PIDs dos workers
     pid_t workers[MAX_WORKERS];
     
@@ -117,14 +139,75 @@ int main(int argc, char *argv[]) {
     
     // IMPLEMENTE AQUI: Loop para criar workers
     for (int i = 0; i < num_workers; i++) {
-        // TODO: Calcular intervalo de senhas para este worker
-        // TODO: Converter indices para senhas de inicio e fim
-        // TODO 4: Usar fork() para criar processo filho
-        // TODO 5: No processo pai: armazenar PID
-        // TODO 6: No processo filho: usar execl() para executar worker
-        // TODO 7: Tratar erros de fork() e execl()
+        // TODO: Calcular intervalo de senhas para este worker //***************FEITO*******************
+        // TODO: Converter indices para senhas de inicio e fim//***************FEITO*******************
+        // TODO 4: Usar fork() para criar processo filho //***************FEITO*******************
+        // TODO 5: No processo pai: armazenar PID //***************FEITO*******************
+        // TODO 6: No processo filho: usar execl() para executar worker //***************FEITO*******************
+        // TODO 7: Tratar erros de fork() e execl() //***************FEITO*******************
     }
-    
+
+    // TODO 3: Criar os processos workers usando fork()
+    printf("Iniciando workers...\n");
+
+    //ira controlar o inicio do range deste worker em indice linear
+    long long start_idx = 0;
+
+    for (int i = 0; i < num_workers; i++) {
+    // TODO: Calcular intervalo de senhas para este worker
+       long long count   = passwords_per_worker + (i < remaining ? 1 : 0);
+       long long end_idx = (count > 0) ? (start_idx + count - 1) : (start_idx - 1);
+
+    //se nao tem trabalho para este worker, siga adiante
+    if (count <= 0) { workers[i] = -1; continue; }
+
+    // TODO: Converter indices para senhas de inicio e fim
+    char start_pwd[128], end_pwd[128];
+    long long tmp;
+
+    //converte o indice do idx(inicial) em uma senha real chamada pwd
+    tmp = start_idx;
+    for (int pos = password_len - 1; pos >= 0; pos--) {
+        start_pwd[pos] = charset[tmp % charset_len];
+        tmp /= charset_len;
+    }
+    start_pwd[password_len] = '\0';
+
+    //converte o indice do idx(final) em uma senha real chamada pwd
+    tmp = end_idx;
+    for (int pos = password_len - 1; pos >= 0; pos--) {
+        end_pwd[pos] = charset[tmp % charset_len];
+        tmp /= charset_len;
+    }
+    end_pwd[password_len] = '\0';
+
+    // TODO 4: Usar fork() para criar processo filho
+    pid_t pid = fork();
+    if (pid < 0) {
+        // TODO 7: Tratar erro de fork()
+        perror("fork");
+        return 1;
+    } else if (pid == 0) {
+        // TODO 6: No processo filho: usar execl() para executar worker
+        char n_str[16], wid_str[16];
+        snprintf(n_str,  sizeof n_str,  "%d", password_len);
+        snprintf(wid_str, sizeof wid_str, "%d", i);
+
+        execl("./worker", "worker",target_hash, start_pwd, end_pwd, charset, n_str, wid_str, (char*)NULL);
+
+        // TODO 7: Tratar erro de execl()
+        perror("execl");
+        _exit(1);
+    } else {
+        // TODO 5: No processo pai: armazenar PID
+        workers[i] = pid;
+        // printf("[Coordinator] W%d (PID %d) -> [%s .. %s]\n", i, pid, start_pwd, end_pwd); (para testar quem e o worker e qual parte do espaco de busca ele vai cobrir)
+    }
+
+    // proximo range comeca apos o fim do atual
+    start_idx = end_idx + 1;
+}
+ 
     printf("\nTodos os workers foram iniciados. Aguardando conclusão...\n");
     
     // TODO 8: Aguardar todos os workers terminarem usando wait()
