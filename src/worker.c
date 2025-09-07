@@ -168,21 +168,46 @@ int main(int argc, char *argv[]) {
     time_t last_progress_time = start_time;
         
     // Loop principal de verificação
-    while (1) {
+    // A condição do loop é verificar se a senha atual ainda não passou do limite
+    while (password_compare(current_password, end_password) <= 0) {
         // TODO 3: Verificar periodicamente se outro worker já encontrou a senha
         // DICA: A cada PROGRESS_INTERVAL senhas, verificar se arquivo resultado existe
-        
+
+        if (passwords_checked % PROGRESS_INTERVAL == 0 && check_result_exists()) {
+            printf("[Worker %d] Parando - senha já foi encontrada por outro worker.\n", worker_id);
+            break;
+        }
+
         // TODO 4: Calcular o hash MD5 da senha atual
         // IMPORTANTE: Use a biblioteca MD5 FORNECIDA - md5_string(senha, hash_buffer)
-        
+
+        // Chama a função md5_string para calcular o hash da senha atual
+        md5_string(current_password, computed_hash);
+
         // TODO 5: Comparar com o hash alvo
         // Se encontrou: salvar resultado e terminar
-        
+        // Usa strcmp para comparar o hash calculado com o hash alvo
+        if (strcmp(computed_hash, target_hash) == 0) {
+            printf("[Worker %d] SENHA ENCONTRADA: %s\n", worker_id, current_password);
+
+            // Chama a função save_result para salvar a senha encontrada
+            save_result(worker_id, current_password);
+
+            // Sai do loop, pois o objetivo foi alcançado
+            break;
+        }
+
         // TODO 6: Incrementar para a próxima senha
         // DICA: Use a função increment_password implementada acima
-        
+
+        // Chama a função increment_password para avançar para a próxima senha
+        if (!increment_password(current_password, charset, charset_len, password_len)) {
+
         // TODO: Verificar se chegou ao fim do intervalo
         // Se sim: terminar loop
+        // Se a função retornar 0, significa que o intervalo de busca foi exaurido
+            break;
+        }
         
         passwords_checked++;
     }
