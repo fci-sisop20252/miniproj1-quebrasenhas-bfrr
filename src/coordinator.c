@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     // long long remaining = ?
     
     // total de combinacoes no espaço de busca
-     long long total_passwords = calculate_search_space(charset_len, password_len);
+     long long total_passwords = total_space;
 
      //divisao entre os workers
      long long passwords_per_worker = total_passwords / num_workers;  // para o quociente
@@ -159,24 +159,10 @@ int main(int argc, char *argv[]) {
     if (count <= 0) { workers[i] = -1; continue; }
 
     // TODO: Converter indices para senhas de inicio e fim
-    char start_pwd[128], end_pwd[128];
-    long long tmp;
+   char start_pwd[128], end_pwd[128];
+   index_to_password(start_idx, charset, charset_len, password_len, start_pwd);
+   index_to_password(end_idx,   charset, charset_len, password_len, end_pwd);
 
-    //converte o indice do idx(inicial) em uma senha real chamada pwd
-    tmp = start_idx;
-    for (int pos = password_len - 1; pos >= 0; pos--) {
-        start_pwd[pos] = charset[tmp % charset_len];
-        tmp /= charset_len;
-    }
-    start_pwd[password_len] = '\0';
-
-    //converte o indice do idx(final) em uma senha real chamada pwd
-    tmp = end_idx;
-    for (int pos = password_len - 1; pos >= 0; pos--) {
-        end_pwd[pos] = charset[tmp % charset_len];
-        tmp /= charset_len;
-    }
-    end_pwd[password_len] = '\0';
 
     // TODO 4: Usar fork() para criar processo filho
     pid_t pid = fork();
