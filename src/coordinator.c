@@ -122,10 +122,7 @@ int main(int argc, char *argv[]) {
     // long long remaining = ?
     
     // total de combinacoes no espaço de busca
-     long long total_passwords = 1;
-     for (int i = 0; i < password_len; i++) {
-     total_passwords *= charset_len;
-    }
+     long long total_passwords = calculate_search_space(charset_len, password_len);
 
      //divisao entre os workers
      long long passwords_per_worker = total_passwords / num_workers;  // para o quociente
