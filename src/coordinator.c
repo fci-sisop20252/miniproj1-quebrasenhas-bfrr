@@ -193,15 +193,33 @@ int main(int argc, char *argv[]) {
  
     printf("\nTodos os workers foram iniciados. Aguardando conclusão...\n");
     
-    // TODO 8: Aguardar todos os workers terminarem usando wait()
+        // TODO 8: Aguardar todos os workers terminarem usando wait()
     // IMPORTANTE: O pai deve aguardar TODOS os filhos para evitar zumbis
     
-    // IMPLEMENTE AQUI:
-    // - Loop para aguardar cada worker terminar
-    // - Usar wait() para capturar status de saída
-    // - Identificar qual worker terminou
-    // - Verificar se terminou normalmente ou com erro
-    // - Contar quantos workers terminaram
+    int workers_finished = 0;
+    // loop pra esperar cada worker terminar
+    while (workers_finished < num_workers) {
+        int status;
+        pid_t pid = wait(&status);   // bloqueia o pai ate que os filhos terminem
+        // verifica se wait() funcionou
+        if (pid > 0) {
+            workers_finished++; // incrementa o contador de quantos workers terminaram 
+            int worker_id = -1;
+            // identifica qual worker terminou, com base no PID
+            for (int j = 0; j < num_workers; j++) {
+                if (workers[j] == pid) {
+                    worker_id = j;
+                    break;
+                }
+            }
+            // verifica se terminou normalmente ou com erro
+            if (WIFEXITED(status)) {
+                printf("Worker %d (PID %d) terminou com código %d\n", worker_id, pid, WEXITSTATUS(status));
+            } else {
+                printf("Worker %d (PID %d) terminou de forma anormal.\n", worker_id, pid);
+            }
+        }
+    }
     
     // Registrar tempo de fim
     time_t end_time = time(NULL);
@@ -211,16 +229,70 @@ int main(int argc, char *argv[]) {
     
     // TODO 9: Verificar se algum worker encontrou a senha
     // Ler o arquivo password_found.txt se existir
+
+    char result_buffer[256];
+    int fd = open(RESULT_FILE, O_RDONLY);
     
-    // IMPLEMENTE AQUI:
-    // - Abrir arquivo RESULT_FILE para leitura
-    // - Ler conteúdo do arquivo
-    // - Fazer parse do formato "worker_id:password"
-    // - Verificar o hash usando md5_string()
-    // - Exibir resultado encontrado
+    // se o fd for menor que 0, o arquivo nao foi encontrado
+    if (fd < 0) {
+        printf("✗ Senha não encontrada no espaço de busca especificado.\n");
+        printf("Verifique se o hash está correto e se o charset contém todos os caracteres.\n");
+    } else {
+        // se o arquivo foi aberto com sucesso, le seu conteudo para o buffer
+        ssize_t bytes_read = read(fd, result_buffer, sizeof(result_buffer) - 1);
+        close(fd);
+
+        // verifica se a leitura foi bem sucedida
+        if (bytes_read > 0) {
+            result_buffer[bytes_read] = '\0'; // add terminador de string
+
+            // strchr pra encontrar a posicao do caractere ':' que separa o ID do worker da senha
+            char *colon_pos = strchr(result_buffer, ':');
+            if (colon_pos) {
+                *colon_pos = '\0'; // separa a string em duas, substituindo ':' por um terminador
+                
+                // extrai o ID do worker e a senha
+                int found_worker_id = atoi(result_buffer);
+                char *found_password = colon_pos + 1;
+                
+                // remove a quebra de linha se existir no final da senha
+                char *newline_pos = strchr(found_password, '\n');
+                if (newline_pos) {
+                    *newline_pos = '\0';
+                }
+
+                // calcula o hash da senha encontrada pra validacao
+                char computed_hash[33];
+                md5_string(found_password, computed_hash);
+
+                // exibe o resultado e verifica se o hash corresponde
+                printf("✓ Senha encontrada!\n");
+                printf("  Senha: %s\n", found_password);
+                printf("  Hash: %s\n", target_hash);
+                printf("  Encontrada pelo Worker %d\n", found_worker_id);
+
+                if (strcmp(computed_hash, target_hash) == 0) {
+                    printf("  Verificação: ✓ Hash corresponde!\n");
+                } else {
+                    printf("  Verificação: ✗ Hash NÃO corresponde! (Erro interno)\n");
+                }
+            } else {
+                printf("✗ Erro no formato do arquivo de resultado.\n");
+            }
+        } else {
+             printf("✗ Senha não encontrada no espaço de busca especificado.\n");
+             printf("Verifique se o hash está correto e se o charset contém todos os caracteres.\n");
+        }
+    }
     
-    // Estatísticas finais (opcional)
+    // Estatísticas finais
     // TODO: Calcular e exibir estatísticas de performance
-    
+    printf("\n=== Estatísticas ===\n");
+    printf("Tempo total: %.2f segundos\n", elapsed_time);
+    printf("Senhas verificadas: %lld\n", total_space);
+    if (elapsed_time > 0) {
+        printf("Taxa: %.0f senhas/segundo\n", total_space / elapsed_time);
+    }
+
     return 0;
 }
