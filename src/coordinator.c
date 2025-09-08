@@ -133,12 +133,6 @@ int main(int argc, char *argv[]) {
     
     // TODO 3: Criar os processos workers usando fork()
     printf("Iniciando workers...\n");
-    
-    // IMPLEMENTE AQUI: Loop para criar workers
-    for (int i = 0; i < num_workers; i++) {
-
-    // TODO 3: Criar os processos workers usando fork()
-    printf("Iniciando workers...\n");
 
     //ira controlar o inicio do range deste worker em indice linear
     long long start_idx = 0;
@@ -280,12 +274,10 @@ int main(int argc, char *argv[]) {
     
     // Estatisticas finais
     // TODO: Calcular e exibir estatísticas de performance
-    printf("\n=== Estatísticas ===\n");
-    printf("Tempo total: %.2f segundos\n", elapsed_time);
+    printf("\n=== Estatística ===\n");
+    // printf("Tempo total: %.2f segundos\n", elapsed_time);
     printf("Senhas verificadas: %lld\n", total_space);
-    if (elapsed_time > 0) {
-        printf("Taxa: %.0f senhas/segundo\n", total_space / elapsed_time);
-    }
+    // if (elapsed_time > 0) { printf("Taxa: %.0f senhas/segundo\n", total_space / elapsed_time); }
 
     return 0;
 }
