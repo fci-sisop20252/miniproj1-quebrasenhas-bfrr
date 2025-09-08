@@ -39,7 +39,7 @@ Leia sobre condições de corrida (aqui)[https://pt.stackoverflow.com/questions/
 
 **Como o coordinator consegue ler o resultado?**
 
-[Explique como o coordinator lê o arquivo de resultado e faz o parse da informação]
+O coordinator consegue ler o resultado depois que todos os workers terminaram. Ele tenta abrir o arquivo password_found.txt no modo leitura. Se ele existir, o coordinator lê para um buffer e faz o parse da string, que está no formato "id_worker:password". A string então é dividida usando strchr(), para encontrar os dois pontos (:). Depois de extrair o ID do worker e a senha, o coordinator valida o resultado calculando o hash da senha encontrada, e comparando com o hash alvo.
 
 ---
 
@@ -59,7 +59,7 @@ O speedup é o tempo do teste com 1 worker dividido pelo tempo com 4 workers.
 
 ## 5. Desafios e Aprendizados
 **Qual foi o maior desafio técnico que você enfrentou?**
-[Descreva um problema e como resolveu. Ex: "Tive dificuldade com o incremento de senha, mas resolvi tratando-o como um contador em base variável"]
+O maior desafio foi garantir que o coordinator e os workers ficassem sincronizados. O problema dos processos zumbis foi resolvido usando a chamada de sistema wait() em um loop, para assegurar que o status de cada filho foi coletado, liberando seus recursos, e evitar que múltiplos workers escrevam o resultado simultaneamente no arquivo. Isso é garantido com as flags O_CREAT e O_EXCL na função open(), garantindo que somente o primeiro worker a encontrar a senha consiga criar o arquivo, enquanto os outros param a busca.
 
 ---
 
