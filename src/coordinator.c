@@ -62,7 +62,7 @@ void index_to_password(long long index, const char *charset, int charset_len,
  * Função principal do coordenador
  */
 int main(int argc, char *argv[]) {
-    // TODO 1: Validar argumentos de entrada//***************FEITO*******************
+    // TODO 1: Validar argumentos de entrada
     // Verificar se argc == 5 (programa + 4 argumentos)
     // Se não, imprimir mensagem de uso e sair com código 1
     
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     int num_workers = atoi(argv[4]);
     int charset_len = strlen(charset);
     
-    // TODO: Adicionar validações dos parâmetros//***************FEITO*******************
+    // TODO: Adicionar validações dos parâmetros
     // - password_len deve estar entre 1 e 10
     // - num_workers deve estar entre 1 e MAX_WORKERS
     // - charset não pode ser vazio
@@ -136,13 +136,6 @@ int main(int argc, char *argv[]) {
     
     // IMPLEMENTE AQUI: Loop para criar workers
     for (int i = 0; i < num_workers; i++) {
-        // TODO: Calcular intervalo de senhas para este worker //***************FEITO*******************
-        // TODO: Converter indices para senhas de inicio e fim//***************FEITO*******************
-        // TODO 4: Usar fork() para criar processo filho //***************FEITO*******************
-        // TODO 5: No processo pai: armazenar PID //***************FEITO*******************
-        // TODO 6: No processo filho: usar execl() para executar worker //***************FEITO*******************
-        // TODO 7: Tratar erros de fork() e execl() //***************FEITO*******************
-    }
 
     // TODO 3: Criar os processos workers usando fork()
     printf("Iniciando workers...\n");
@@ -285,7 +278,7 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    // Estatísticas finais
+    // Estatisticas finais
     // TODO: Calcular e exibir estatísticas de performance
     printf("\n=== Estatísticas ===\n");
     printf("Tempo total: %.2f segundos\n", elapsed_time);
