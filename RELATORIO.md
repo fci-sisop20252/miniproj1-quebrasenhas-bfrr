@@ -8,7 +8,7 @@
 
 **Como você dividiu o espaço de busca entre os workers?**
 
-[Explique seu algoritmo de divisão]
+O coordinator calcula o número total de combinações de senhas possíveis e divide essa quantidade igualmente entre o número de workers. Ele então define um intervalo de senhas de início e fim para cada worker e os passa como argumentos quando cria os processos filhos com fork() e exec(). Cada worker é responsável por executar a busca por força bruta apenas em seu intervalo designado, incrementando a senha de forma incremental com base no charset até encontrar o hash alvo ou atingir o fim de seu espaço de busca.
 
 **Código relevante:** Cole aqui a parte do coordinator.c onde você calcula a divisão:
 ```c
