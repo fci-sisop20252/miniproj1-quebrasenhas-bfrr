@@ -12,7 +12,39 @@ O coordinator calcula o número total de combinações de senhas possíveis e di
 
 **Código relevante:** Cole aqui a parte do coordinator.c onde você calcula a divisão:
 ```c
-// Cole seu código de divisão aqui
+long long total_passwords = total_space;
+
+     //divisao entre os workers
+     long long passwords_per_worker = total_passwords / num_workers;  // para o quociente
+     long long remaining = total_passwords % num_workers;  // para o resto
+   
+    // Arrays para armazenar PIDs dos workers
+    pid_t workers[MAX_WORKERS];
+    
+    // TODO 3: Criar os processos workers usando fork()
+    printf("Iniciando workers...\n");
+
+    //ira controlar o inicio do range deste worker em indice linear
+    long long start_idx = 0;
+
+    for (int i = 0; i < num_workers; i++) {
+    // TODO: Calcular intervalo de senhas para este worker
+       long long count   = passwords_per_worker + (i < remaining ? 1 : 0);
+       long long end_idx = (count > 0) ? (start_idx + count - 1) : (start_idx - 1);
+
+    //se nao tem trabalho para este worker, siga adiante
+    if (count <= 0) { workers[i] = -1; continue; }
+
+    // TODO: Converter indices para senhas de inicio e fim
+   char start_pwd[128], end_pwd[128];
+   index_to_password(start_idx, charset, charset_len, password_len, start_pwd);
+   index_to_password(end_idx,   charset, charset_len, password_len, end_pwd);
+
+   // ... parte de fork/exec ...
+
+    // proximo range comeca apos o fim do atual
+    start_idx = end_idx + 1;
+}
 ```
 
 ---
