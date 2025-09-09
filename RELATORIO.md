@@ -128,8 +128,8 @@ O speedup é o tempo do teste com 1 worker dividido pelo tempo com 4 workers.
 
 | Teste | 1 Worker | 2 Workers | 4 Workers | Speedup (4w) |
 |-------|----------|-----------|-----------|--------------|
-| Hash: 202cb962ac59075b964b07152d234b70<br>Charset: "0123456789"<br>Tamanho: 3<br>Senha: "123" | ___s | ___s | ___s | ___ |
-| Hash: 5d41402abc4b2a76b9719d911017c592<br>Charset: "abcdefghijklmnopqrstuvwxyz"<br>Tamanho: 5<br>Senha: "hello" | ___s | ___s | ___s | ___ |
+| Hash: 202cb962ac59075b964b07152d234b70<br>Charset: "0123456789"<br>Tamanho: 3<br>Senha: "123" | 0.005s | 0.007s | 0.009s | 0.55 |
+| Hash: 5d41402abc4b2a76b9719d911017c592<br>Charset: "abcdefghijklmnopqrstuvwxyz"<br>Tamanho: 5<br>Senha: "hello" | 4.391s | 7.708s | 1.699s | 2.58 |
 
 **O speedup foi linear? Por quê?**
 [Analise se dobrar workers realmente dobrou a velocidade e explique o overhead de criar processos]
@@ -138,6 +138,7 @@ O speedup é o tempo do teste com 1 worker dividido pelo tempo com 4 workers.
 
 ## 5. Desafios e Aprendizados
 **Qual foi o maior desafio técnico que você enfrentou?**
+
 O maior desafio foi garantir que o coordinator e os workers ficassem sincronizados. O problema dos processos zumbis foi resolvido usando a chamada de sistema wait() em um loop, para assegurar que o status de cada filho foi coletado, liberando seus recursos, e evitar que múltiplos workers escrevam o resultado simultaneamente no arquivo. Isso é garantido com as flags O_CREAT e O_EXCL na função open(), garantindo que somente o primeiro worker a encontrar a senha consiga criar o arquivo, enquanto os outros param a busca.
 
 ---
