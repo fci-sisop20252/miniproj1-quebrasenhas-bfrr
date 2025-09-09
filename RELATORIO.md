@@ -21,11 +21,58 @@
 
 **Descreva como você usou fork(), execl() e wait() no coordinator:**
 
-[Explique em um parágrafo como você criou os processos, passou argumentos e esperou pela conclusão]
+No coordinator, utilizamos o fork() para criar multiplos processos filhos, cada um responsável por uma parte do espaço de busca. Em cada filho, chamamos o execl() para executar o programa worker, repassando todos os argumentos necessários(hash alvo, a senha inicial e final do intervalo, o conjunto de caracteres, o tamanho da senha e o identificador do worker). No processo pai, usamos o wait() em um loop para aguardar a finalização de todos os filhos, garantindo que cada término fosse devidamente coletado pelo sistema.
 
 **Código do fork/exec:**
 ```c
-// Cole aqui seu loop de criação de workers
+  // TODO 3: Criar os processos workers usando fork()
+    printf("Iniciando workers...\n");
+
+    //ira controlar o inicio do range deste worker em indice linear
+    long long start_idx = 0;
+
+    for (int i = 0; i < num_workers; i++) {
+    // TODO: Calcular intervalo de senhas para este worker
+       long long count   = passwords_per_worker + (i < remaining ? 1 : 0);
+       long long end_idx = (count > 0) ? (start_idx + count - 1) : (start_idx - 1);
+
+    //se nao tem trabalho para este worker, siga adiante
+    if (count <= 0) { workers[i] = -1; continue; }
+
+    // TODO: Converter indices para senhas de inicio e fim
+   char start_pwd[128], end_pwd[128];
+   index_to_password(start_idx, charset, charset_len, password_len, start_pwd);
+   index_to_password(end_idx,   charset, charset_len, password_len, end_pwd);
+
+
+    // TODO 4: Usar fork() para criar processo filho
+    pid_t pid = fork();
+    if (pid < 0) {
+        // TODO 7: Tratar erro de fork()
+        perror("fork");
+        return 1;
+    } else if (pid == 0) {
+        // TODO 6: No processo filho: usar execl() para executar worker
+        char n_str[16], wid_str[16];
+        snprintf(n_str,  sizeof n_str,  "%d", password_len);
+        snprintf(wid_str, sizeof wid_str, "%d", i);
+
+        execl("./worker", "worker",target_hash, start_pwd, end_pwd, charset, n_str, wid_str, (char*)NULL);
+
+        // TODO 7: Tratar erro de execl()
+        perror("execl");
+        _exit(1);
+    } else {
+        // TODO 5: No processo pai: armazenar PID
+        workers[i] = pid;
+        // printf("[Coordinator] W%d (PID %d) -> [%s .. %s]\n", i, pid, start_pwd, end_pwd); (para testar quem e o worker e qual parte do espaco de busca ele vai cobrir)
+    }
+
+    // proximo range comeca apos o fim do atual
+    start_idx = end_idx + 1;
+}
+ 
+    printf("\nTodos os workers foram iniciados. Aguardando conclusão...\n");
 ```
 
 ---
