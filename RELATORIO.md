@@ -113,8 +113,7 @@ No coordinator, utilizamos o fork() para criar multiplos processos filhos, cada 
 
 **Como você garantiu que apenas um worker escrevesse o resultado?**
 
-[Explique como você implementou uma escrita atômica e como isso evita condições de corrida]
-Leia sobre condições de corrida (aqui)[https://pt.stackoverflow.com/questions/159342/o-que-%C3%A9-uma-condi%C3%A7%C3%A3o-de-corrida]
+A escrita atômica foi implementada usando a chamada de sistema open() com as flags O_CREAT e O_EXCL. A flag O_CREAT cria o arquivo, e O_EXCL garante que a chamada falhe se o arquivo já existir. Dessa forma, o primeiro worker que encontra a senha consegue criar o arquivo e registrar o resultado, enquanto os outros falham ao tentar criar o mesmo arquivo e são instruídos a parar a busca.
 
 **Como o coordinator consegue ler o resultado?**
 
@@ -132,7 +131,9 @@ O speedup é o tempo do teste com 1 worker dividido pelo tempo com 4 workers.
 | Hash: 5d41402abc4b2a76b9719d911017c592<br>Charset: "abcdefghijklmnopqrstuvwxyz"<br>Tamanho: 5<br>Senha: "hello" | 4.391s | 7.708s | 1.699s | 2.58 |
 
 **O speedup foi linear? Por quê?**
-[Analise se dobrar workers realmente dobrou a velocidade e explique o overhead de criar processos]
+Para o teste com a senha "123", o speedup não foi linear, com o tempo de execução aumentando de 0.005s para 0.009s. Isso ocorre porque a busca é muito rápida e o tempo de execução é dominado pelo overhead de criar e gerenciar os processos filhos, que é um custo fixo do sistema.
+
+Já para o teste de estresse com a senha "hello", o speedup foi de 2.58x, sendo uma melhora significativa, mas não perfeitamente linear. O resultado com 2 workers (7.708s) foi, na verdade, maior do que com 1 worker (4.391s). Essa não linearidade e até a degradação de performance são explicadas pelo mesmo overhead de fork() e exec() e pelo tempo de sincronização para que o coordinator aguarde todos os processos. Aceleração real só é vista quando o tempo de computação de cada worker se torna muito maior do que o tempo de gerenciamento dos processos, como no caso do teste com 4 workers, onde o speedup foi de 2.58x.
 
 ---
 
